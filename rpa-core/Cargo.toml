@@ -1,0 +1,30 @@
+[package]
+name = "rpa-core"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+yahoo_finance_api = "2.0"
+tokio = { version = "1.0", features = ["full"] }
+rhai = "1.16"
+image = "0.24"
+scrap = "0.5"
+enigo = "0.0.14"
+
+# added for licensing
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+ed25519-dalek = { version = "1", features = ["std"] }
+base64 = "0.21"
+
+
+# optional OCR support, requires system tesseract
+[features]
+ocr = ["leptess"]
+
+[dependencies.leptess]
+version = "0.14"
+optional = true
+
+[dev-dependencies]
+tempfile = "3"

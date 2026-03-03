@@ -1,0 +1,13 @@
+/target/                # 编译产物
+.env                    # 环境变量
+/scripts/*.rhai         # 商业脚本
+license.key             # 本地测试用的授权文件
+license.txt            # 运行时许可证
+*.private.pem           # 你的私钥
+
+# ignore Cargo artifacts
+**/target/
+**/Cargo.lock
+
+# ignore IDE files
+.vscode/

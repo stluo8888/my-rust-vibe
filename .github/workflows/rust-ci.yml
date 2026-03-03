@@ -1,0 +1,68 @@
+name: Rust CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build-test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Rust toolchain
+        uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: stable
+          override: true
+
+      - name: Build workspace (without OCR)
+        run: cargo build --workspace
+
+      - name: Build license server example
+        run: cargo build -p license-server
+
+      - name: Install tesseract (for OCR tests)
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y tesseract-ocr libtesseract-dev libleptonica-dev
+
+      - name: Build & test with OCR feature
+        run: |
+          cargo build --workspace --features ocr
+          cargo test --workspace --features ocr -- --nocapture
+
+      - name: Generate a temporary license for script testing
+        env:
+          LICENSE_PRIVATE_KEY: ${{ secrets.LICENSE_PRIVATE_KEY }}
+        run: |
+          # `rpa-bin` uses LICENSE_PRIVATE_KEY to write license.txt
+          cd rpa-bin
+          cargo run -- gen-license
+          cd ..
+
+      - name: Run automation script as smoke test
+        env:
+          RPA_SKIP_LICENSE: "1"
+          RPA_HEADLESS: "1"
+        run: |
+          cd rpa-bin
+          cargo run -- ../scripts/automation.rhai
+
+      - name: Secret scan
+        run: |
+          forbidden=$(git grep -n 'LICENSE_PRIVATE_KEY' || true)
+          if [ -n "$forbidden" ]; then
+            echo "Forbidden string found in repository:"
+            echo "$forbidden"
+            exit 1
+          fi
+
+      - name: Lint with clippy
+        uses: actions-rs/clippy@v1
+        with:
+          args: --all-targets -- -D warnings

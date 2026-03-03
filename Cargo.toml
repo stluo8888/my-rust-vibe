@@ -1,0 +1,7 @@
+[workspace]
+resolver = "3"
+members = [
+    "rpa-bin",
+    "rpa-core",
+    "license-server",
+]
